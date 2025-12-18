@@ -1,46 +1,57 @@
 import os
+import sys 
 from src.core.services import VideoServices
-from src.infrastructure.scanners.bs4_scanner import BS4Scanner
-from src.infrastructure.downloaders.ytdlp_downloader import YtdlpDownloader
+from src.infrastructure.factories import ScannerFactory
+from src.infrastructure.downloaders.ytdlp_downloader import YtdlpDownloader 
 
 def main():
-    print("🚀 Video Botu Başlatılıyor (Service Mimarisili)...")
+    print("🚀 Akıllı Video Botu (v0.2 Factory)")
     print("-" * 50)
-    my_scanner = BS4Scanner()
-    my_downloader = YtdlpDownloader()
-    services = VideoServices(scanner=my_scanner,downloader=my_downloader)
+   
+    if len(sys.argv) > 1:
+        target_url = sys.argv[1]
+    else:
+        target_url = input("🔗 Video Linkini Yapıştır: ").strip()
 
-    test_url = "https://www.w3schools.com/html/html5_video.asp"
+    if not target_url:
+        print("❌ Link girmediniz.")
+        return
+    
     download_folder= os.path.join(os.getcwd(),"downloads")
-    print("Hedef URL :", test_url)
+    print("Hedef URL :", target_url)
     print("-"*20)
 
-
     try:
-        found_videos = services.scan_url(test_url)
+        selected_scanner = ScannerFactory.get_scanner(target_url)
     except Exception as e:
-        print(f"\n❌ Tarama Hatası: {e}")
+        print(f"❌ Fabrika Hatası: {e}")
         return
+    
+    downloader = YtdlpDownloader()
+    services = VideoServices(scanner=selected_scanner,downloader=downloader)
+
+    print(f"📡 Analiz Ediliyor: {target_url}")
+    found_videos = services.scan_url(target_url)
+
     if not found_videos:
-        print("\n❌ Tarama Başarısız: Hiç video bulunamadı.")
+        print("❌ Video bulunamadı.")
         return
 
-    video_to_download = found_videos[0]
-    print(f"\n✅ Video Bulundu:")
-    print(f"   Başlık: {video_to_download.title}")
-    print(f"   Kalite: {video_to_download.resolution}")
-    print("-" * 50)
+    # Bulunan videoları listele
+    print(f"\n✅ {len(found_videos)} video bulundu:")
+    for i, v in enumerate(found_videos, 1):
+        print(f"{i}. {v.title} ({v.resolution})")
 
-    print(f'indirme Başlıyor...')
-    print(f"📂 İndirme Konumu: {download_folder}")
-
-    success = services.download_video(video_to_download, download_folder)
+    # Otomatik olarak ilkini indir (İleride seçim yaptırabiliriz)
+    chosen_video = found_videos[0]
+    
+    print(f"\n⬇️  İndiriliyor: {chosen_video.title}")
+    success = services.download_video(chosen_video, download_folder)
 
     if success:
-        print("\n🎉 İŞLEM BAŞARILI!")
-        print(f"Video şuraya indirildi: {download_folder}")
+        print(f"🎉 İşlem Başarılı! \n📂 Konum: {download_folder}")
     else:
-        print("\n❌ İndirme başarısız oldu.")
+        print("❌ İndirme başarısız.")
 
 
 
