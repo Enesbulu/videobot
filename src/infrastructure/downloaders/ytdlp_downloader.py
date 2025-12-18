@@ -11,7 +11,7 @@ class YtdlpDownloader(VideoDownloader):
         
         ydl_opts={
             'outtmpl': f'{download_path}/%(title)s.%(ext)s',
-            'format':'22/18',
+            'format': '22/18/best',
             'noprogress':False,
             'quiet':False,
         }

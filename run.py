@@ -1,17 +1,16 @@
-from src.infrastructure.scanners.ytdlp_scanner import YTDLPScanner
 import os
-from src.infrastructure.downloaders.ytdlp_downloader import YtdlpDownloader
 from src.core.services import VideoServices
+from src.infrastructure.scanners.bs4_scanner import BS4Scanner
+from src.infrastructure.downloaders.ytdlp_downloader import YtdlpDownloader
 
 def main():
     print("🚀 Video Botu Başlatılıyor (Service Mimarisili)...")
     print("-" * 50)
-
-    my_scanner= YTDLPScanner()
+    my_scanner = BS4Scanner()
     my_downloader = YtdlpDownloader()
     services = VideoServices(scanner=my_scanner,downloader=my_downloader)
 
-    test_url = "https://www.youtube.com/watch?v=xg_7Kw0NpDw"
+    test_url = "https://www.w3schools.com/html/html5_video.asp"
     download_folder= os.path.join(os.getcwd(),"downloads")
     print("Hedef URL :", test_url)
     print("-"*20)
