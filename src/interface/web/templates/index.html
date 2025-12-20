@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+
+        .status-badge {
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <div class="text-center mb-5">
+                    <h1 class="display-6 fw-bold text-primary"><i class="fas fa-robot"></i> Video Downloader Bot</h1>
+                    <p class="text-muted">Clean Architecture & Flask UI</p>
+                </div>
+
+                <div class="card main-card mb-4 p-4">
+                    <form method="POST" action="/">
+                        <label class="form-label fw-bold">Video Kaynağı (URL)</label>
+                        <div class="input-group input-group-lg">
+                            <input type="text" name="url" class="form-control"
+                                placeholder="Örn: https://www.youtube.com/..." value="{{ url }}" required>
+                            <button class="btn btn-primary px-4" type="submit">
+                                <i class="fas fa-search"></i> Videoları Tara
+                            </button>
+                        </div>
+                    </form>
+                    {% if error %}
+                    <div class="alert alert-danger mt-3">{{ error }}</div>
+                    {% endif %}
+                </div>
+
+                {% if videos %}
+                <div class="card main-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list"></i> Bulunan Videolar ({{ videos|length }})
+                        </h5>
+                        <button class="btn btn-success" onclick="downloadSelected()">
+                            <i class="fas fa-download"></i> Seçilenleri İndir
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 50px;"><input type="checkbox" class="form-check-input"
+                                            id="selectAll" onclick="toggleAll(this)"></th>
+                                    <th>Başlık</th>
+                                    <th>Kalite</th>
+                                    <th>Süre</th>
+                                    <th style="width: 150px;">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for video in videos %}
+                                <tr id="row-{{ loop.index }}">
+                                    <td>
+                                        <input type="checkbox" class="form-check-input video-checkbox"
+                                            value="{{ video.url }}" data-title="{{ video.title }}"
+                                            data-row="row-{{ loop.index }}">
+                                    </td>
+                                    <td class="fw-semibold text-break">{{ video.title }}</td>
+                                    <td><span class="badge bg-info text-dark">{{ video.resolution or 'N/A' }}</span>
+                                    </td>
+                                    <td>{{ video.duration or '-' }}</td>
+                                    <td class="status-cell">
+                                        <span class="text-muted"><small>Bekliyor</small></span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tümünü Seç / Kaldır
+        function toggleAll(source) {
+            checkboxes = document.querySelectorAll('.video-checkbox');
+            for (var i = 0, n = checkboxes.length; i < n; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+
+        // Seçilenleri İndir Fonksiyonu
+        async function downloadSelected() {
+            const checkboxes = document.querySelectorAll('.video-checkbox:checked');
+
+            if (checkboxes.length === 0) {
+                alert("Lütfen en az bir video seçin!");
+                return;
+            }
+
+            if (!confirm(checkboxes.length + " adet video indirilecek. Onaylıyor musunuz?")) return;
+
+            // Her bir video için sırayla istek at
+            for (const box of checkboxes) {
+                const rowId = box.getAttribute('data-row');
+                const statusCell = document.querySelector(`#${rowId} .status-cell`);
+
+                // Durumu güncelle: Yükleniyor
+                statusCell.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> <small>İndiriliyor...</small>';
+
+                const payload = {
+                    url: box.value,
+                    title: box.getAttribute('data-title')
+                };
+
+                try {
+                    // API'ye istek at
+                    const response = await fetch('/api/download', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        statusCell.innerHTML = '<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> Tamamlandı</span>';
+                        // İndirileni seçimden kaldır
+                        box.checked = false;
+                    } else {
+                        statusCell.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> Hata</span>';
+                        console.error(result.message);
+                    }
+
+                } catch (error) {
+                    statusCell.innerHTML = '<span class="text-danger">Ağ Hatası</span>';
+                }
+            }
+
+            alert("İşlem tamamlandı! İndirilen dosyalar 'downloads' klasöründe.");
+        }
+    </script>
+
+</body>
+
+</html>
