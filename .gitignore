@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Sanal Ortam (Virtual Env)
+venv/
+env/
+.env
+
+# IDE Ayarları (VS Code vs.)
+.vscode/
+.idea/
+
+# Proje çıktıları (İndirilen videoları Github'a yükleme!)
+downloads/
+*.mp4
+*.mp3
+
+# Loglar ve Database
+*.log
+*.sqlite3
