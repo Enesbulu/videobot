@@ -27,7 +27,6 @@ Modern bir web arayüzüne (UI) sahiptir ve Server-Sent Events (SSE) teknolojisi
 - **Frontend:** HTML5, Bootstrap 5, JavaScript (EventSource/SSE)
 
 ## 📂 Proje Yapısı
-
 ```text
 videobot/
 ├── src/
@@ -61,7 +60,8 @@ Bash
 
 4. Tarayıcıyı açın:
  http://127.0.0.1:5000 adresine gidin.
+```
 
-📸 Ekran Görüntüleri
 
- ![alt text](image.png)
+## 📸 Ekran Görüntüleri 
+<img width="1532" height="846" alt="image" src="https://github.com/user-attachments/assets/81c4b8d7-84a6-41c7-be37-ccf5a10358d2" />
