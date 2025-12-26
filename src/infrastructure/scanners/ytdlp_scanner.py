@@ -1,9 +1,9 @@
 from src.core.entities import Video
-from src.core.ports import videoScanner
+from src.core.ports import VideoScanner
 import yt_dlp
 from typing import List
 
-class YTDLPScanner(videoScanner):
+class YTDLPScanner(VideoScanner):
     def scan(self,url:str)-> List[Video]:
         print(f"🔍 '{url}' adresi taranıyor...")
         ydl_opts={

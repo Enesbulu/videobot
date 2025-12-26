@@ -4,166 +4,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Downloader Bot</title>
+    <title>Smart Video Spider v1.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
         body {
-            background-color: #f0f2f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            font-family: 'Segoe UI', monospace;
         }
 
-        .main-card {
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        .card {
+            background-color: #313244;
             border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .table-hover tbody tr:hover {
-            background-color: #f1f3f5;
+        .btn-primary {
+            background-color: #89b4fa;
+            border: none;
+            color: #1e1e2e;
+            font-weight: bold;
         }
 
-        .status-badge {
-            font-size: 0.85em;
+        .btn-primary:hover {
+            background-color: #b4befe;
+        }
+
+        #logConsole {
+            background-color: #11111b;
+            color: #a6e3a1;
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            border: 1px solid #45475a;
+            font-family: 'Consolas', monospace;
+        }
+
+        .log-line {
+            margin: 2px 0;
+            border-bottom: 1px solid #1e1e2e33;
+        }
+
+        .log-time {
+            color: #f9e2af;
+            margin-right: 10px;
+            font-size: 0.8em;
+        }
+
+        .log-error {
+            color: #f38ba8;
+        }
+
+        .log-warning {
+            color: #fab387;
+        }
+
+        .log-success {
+            color: #a6e3a1;
+            font-weight: bold;
+        }
+
+        .stat-card {
+            background: #45475a;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #89b4fa;
+        }
+
+        /* Ayar Kutuları */
+        .setting-label {
+            font-size: 0.8rem;
+            color: #a6adc8;
+            margin-bottom: 2px;
+        }
+
+        .form-control-sm {
+            background-color: #181825;
+            border: 1px solid #45475a;
+            color: white;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
+    <div class="container py-4">
+        <h2 class="text-center mb-4"><i class="fas fa-spider"></i> Smart Video Spider <small
+                class="text-muted fs-6">v1.0 Stable</small></h2>
 
-                <div class="text-center mb-5">
-                    <h1 class="display-6 fw-bold text-primary"><i class="fas fa-robot"></i> Video Downloader Bot</h1>
-                    <p class="text-muted">Clean Architecture & Flask UI</p>
+        <div class="card p-4 mb-4">
+            <label class="form-label">Hedef URL</label>
+            <div class="input-group input-group-lg mb-3">
+                <input type="text" id="targetUrl" class="form-control bg-dark text-light"
+                    placeholder="Örn: https://www.w3schools.com" value="https://gloriajeans.com.tr/">
+                <button class="btn btn-primary px-4" onclick="startScan()">
+                    <i class="fas fa-play"></i> BAŞLAT
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center mb-3">
+                <div class="form-check form-switch me-4">
+                    <input class="form-check-input" type="checkbox" id="crawlMode" onchange="toggleOptions()">
+                    <label class="form-check-label" for="crawlMode">🕷️ <strong>Örümcek Modu</strong></label>
                 </div>
+            </div>
 
-                <div class="card main-card mb-4 p-4">
-                    <form method="POST" action="/">
-                        <label class="form-label fw-bold">Video Kaynağı (URL)</label>
-                        <div class="input-group input-group-lg">
-                            <input type="text" name="url" class="form-control"
-                                placeholder="Örn: https://www.youtube.com/..." value="{{ url }}" required>
-                            <button class="btn btn-primary px-4" type="submit">
-                                <i class="fas fa-search"></i> Videoları Tara
-                            </button>
-                        </div>
-                    </form>
-                    {% if error %}
-                    <div class="alert alert-danger mt-3">{{ error }}</div>
-                    {% endif %}
+            <div id="advancedOptions" class="row g-2"
+                style="display:none; border-top: 1px solid #45475a; padding-top: 15px;">
+                <div class="col-md-4">
+                    <div class="setting-label">Maksimum Derinlik</div>
+                    <input type="number" id="optDepth" class="form-control form-control-sm" value="3" min="1" max="10">
                 </div>
-
-                {% if videos %}
-                <div class="card main-card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list"></i> Bulunan Videolar ({{ videos|length }})
-                        </h5>
-                        <button class="btn btn-success" onclick="downloadSelected()">
-                            <i class="fas fa-download"></i> Seçilenleri İndir
-                        </button>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 50px;"><input type="checkbox" class="form-check-input"
-                                            id="selectAll" onclick="toggleAll(this)"></th>
-                                    <th>Başlık</th>
-                                    <th>Kalite</th>
-                                    <th>Süre</th>
-                                    <th style="width: 150px;">Durum</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for video in videos %}
-                                <tr id="row-{{ loop.index }}">
-                                    <td>
-                                        <input type="checkbox" class="form-check-input video-checkbox"
-                                            value="{{ video.url }}" data-title="{{ video.title }}"
-                                            data-row="row-{{ loop.index }}">
-                                    </td>
-                                    <td class="fw-semibold text-break">{{ video.title }}</td>
-                                    <td><span class="badge bg-info text-dark">{{ video.resolution or 'N/A' }}</span>
-                                    </td>
-                                    <td>{{ video.duration or '-' }}</td>
-                                    <td class="status-cell">
-                                        <span class="text-muted"><small>Bekliyor</small></span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="col-md-4">
+                    <div class="setting-label">Maksimum Sayfa</div>
+                    <input type="number" id="optPages" class="form-control form-control-sm" value="100" min="1">
                 </div>
-                {% endif %}
+                <div class="col-md-4">
+                    <div class="setting-label">Maksimum Video Hedefi</div>
+                    <input type="number" id="optVideos" class="form-control form-control-sm" value="100" min="1">
+                </div>
+            </div>
+        </div>
 
+        <div class="row mb-4" id="statsArea" style="display:none;">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="text-muted small">Ziyaret Edilen</div>
+                    <div class="stat-val" id="pageCount">0</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="text-muted small">Bulunan Video</div>
+                    <div class="stat-val" id="videoCount">0</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="text-muted small">Durum</div>
+                    <div class="stat-val" id="statusText" style="font-size: 1rem;">Hazır</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="consoleArea" style="display:none;">
+            <h5 class="mb-2"><i class="fas fa-terminal"></i> Canlı İşlem Kaydı</h5>
+            <div id="logConsole"></div>
+        </div>
+
+        <div id="resultsArea" class="mt-4" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="text-success"><i class="fas fa-check-circle"></i> Sonuçlar</h5>
+                <button class="btn btn-success btn-sm" onclick="downloadSelected()">
+                    <i class="fas fa-download"></i> Seçilenleri İndir
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th width="40"><input type="checkbox" class="form-check-input" onclick="toggleAll(this)">
+                            </th>
+                            <th>Video Başlığı</th>
+                            <th>URL</th>
+                            <th width="120">Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody id="videoTableBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
-        // Tümünü Seç / Kaldır
-        function toggleAll(source) {
-            checkboxes = document.querySelectorAll('.video-checkbox');
-            for (var i = 0, n = checkboxes.length; i < n; i++) {
-                checkboxes[i].checked = source.checked;
+        let eventSource = null;
+
+        function toggleOptions() {
+            const isCrawl = document.getElementById('crawlMode').checked;
+            document.getElementById('advancedOptions').style.display = isCrawl ? 'flex' : 'none';
+        }
+
+        function log(msg, type = 'info') {
+            const consoleDiv = document.getElementById('logConsole');
+            const time = new Date().toLocaleTimeString();
+            let colorClass = '';
+            if (type === 'error') colorClass = 'log-error';
+            if (type === 'warning') colorClass = 'log-warning';
+            if (type === 'success') colorClass = 'log-success';
+
+            consoleDiv.innerHTML += `<div class="log-line ${colorClass}"><span class="log-time">[${time}]</span> ${msg}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function updateStats(stats) {
+            if (!stats) return;
+            document.getElementById('pageCount').innerText = stats.pages + " / " + stats.max_pages;
+            document.getElementById('videoCount').innerText = stats.videos;
+        }
+
+        function startScan() {
+            const url = document.getElementById('targetUrl').value;
+            const isCrawl = document.getElementById('crawlMode').checked;
+
+            // Ayarları al
+            const depth = document.getElementById('optDepth').value;
+            const pages = document.getElementById('optPages').value;
+            const videos = document.getElementById('optVideos').value;
+
+            if (!url) { alert("Lütfen bir URL girin!"); return; }
+
+            // UI Reset
+            document.getElementById('logConsole').innerHTML = '';
+            document.getElementById('videoTableBody').innerHTML = '';
+            document.getElementById('statsArea').style.display = 'flex';
+            document.getElementById('consoleArea').style.display = 'block';
+            document.getElementById('resultsArea').style.display = 'none';
+            document.getElementById('statusText').innerText = 'Başlatılıyor...';
+
+            if (eventSource) eventSource.close();
+
+            // Parametreleri URL'e ekle
+            let streamUrl = `/stream_crawl?url=${encodeURIComponent(url)}&crawler=${isCrawl}`;
+            if (isCrawl) {
+                streamUrl += `&depth=${depth}&pages=${pages}&videos=${videos}`;
+            }
+
+            eventSource = new EventSource(streamUrl);
+
+            eventSource.onmessage = function (e) {
+                const data = JSON.parse(e.data);
+                const payload = data.payload;
+
+                if (payload.stats) updateStats(payload.stats);
+
+                switch (data.type) {
+                    case 'log': log(payload.message); break;
+                    case 'status': document.getElementById('statusText').innerText = payload.message; break;
+                    case 'video_found': log(payload.message, 'success'); break;
+                    case 'warning': log(payload.message, 'warning'); break;
+                    case 'error': log(payload.message, 'error'); break;
+                    case 'finish':
+                        eventSource.close();
+                        document.getElementById('statusText').innerText = 'Tamamlandı';
+                        log("🏁 İşlem bitti.", "success");
+                        loadResults();
+                        break;
+                }
+            };
+
+            eventSource.onerror = function () {
+                log("Bağlantı kesildi.", 'error');
+                eventSource.close();
+            };
+        }
+
+        async function loadResults() {
+            const response = await fetch('/get_results');
+            const videos = await response.json();
+            const tbody = document.getElementById('videoTableBody');
+            tbody.innerHTML = '';
+
+            if (videos.length > 0) {
+                document.getElementById('resultsArea').style.display = 'block';
+                videos.forEach((v) => {
+                    tbody.innerHTML += `
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input vid-check" value="${v.url}" data-title="${v.title}"></td>
+                        <td class="fw-bold">${v.title}</td>
+                        <td><a href="${v.url}" target="_blank" class="text-decoration-none text-muted small text-truncate d-block" style="max-width:300px">${v.url}</a></td>
+                        <td class="status-cell"><span class="badge bg-secondary">Bekliyor</span></td>
+                    </tr>`;
+                });
+            } else {
+                log("❌ Video bulunamadı.", 'warning');
             }
         }
 
-        // Seçilenleri İndir Fonksiyonu
+        function toggleAll(src) { document.querySelectorAll('.vid-check').forEach(c => c.checked = src.checked); }
+
         async function downloadSelected() {
-            const checkboxes = document.querySelectorAll('.video-checkbox:checked');
+            const checks = document.querySelectorAll('.vid-check:checked');
+            if (!checks.length) return alert("Seçim yapın!");
+            if (!confirm(checks.length + " video indirilecek?")) return;
 
-            if (checkboxes.length === 0) {
-                alert("Lütfen en az bir video seçin!");
-                return;
-            }
-
-            if (!confirm(checkboxes.length + " adet video indirilecek. Onaylıyor musunuz?")) return;
-
-            // Her bir video için sırayla istek at
-            for (const box of checkboxes) {
-                const rowId = box.getAttribute('data-row');
-                const statusCell = document.querySelector(`#${rowId} .status-cell`);
-
-                // Durumu güncelle: Yükleniyor
-                statusCell.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> <small>İndiriliyor...</small>';
-
-                const payload = {
-                    url: box.value,
-                    title: box.getAttribute('data-title')
-                };
-
+            for (let chk of checks) {
+                const cell = chk.closest('tr').querySelector('.status-cell');
+                cell.innerHTML = '<span class="spinner-border spinner-border-sm text-info"></span>';
                 try {
-                    // API'ye istek at
-                    const response = await fetch('/api/download', {
+                    const res = await fetch('/api/download', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({ url: chk.value, title: chk.getAttribute('data-title') })
                     });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        statusCell.innerHTML = '<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> Tamamlandı</span>';
-                        // İndirileni seçimden kaldır
-                        box.checked = false;
-                    } else {
-                        statusCell.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> Hata</span>';
-                        console.error(result.message);
-                    }
-
-                } catch (error) {
-                    statusCell.innerHTML = '<span class="text-danger">Ağ Hatası</span>';
-                }
+                    const r = await res.json();
+                    cell.innerHTML = r.success ? '<span class="badge bg-success">İndi</span>' : '<span class="badge bg-danger">Hata</span>';
+                    if (r.success) chk.checked = false;
+                } catch (e) { cell.innerHTML = 'Hata'; }
             }
-
-            alert("İşlem tamamlandı! İndirilen dosyalar 'downloads' klasöründe.");
         }
     </script>
 
